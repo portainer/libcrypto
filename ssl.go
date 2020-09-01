@@ -13,7 +13,7 @@ import (
 )
 
 // GenerateCertsForHost generates a self-signed certificate for host and saves them at certPath and keyPath
-func GenerateCertsForHost(host, certPath, keyPath string) error {
+func GenerateCertsForHost(hostname, ip, certPath, keyPath string) error {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
@@ -29,13 +29,13 @@ func GenerateCertsForHost(host, certPath, keyPath string) error {
 		BasicConstraintsValid: true,
 	}
 
-	ip := net.ParseIP(host)
-	if ip == nil {
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
 		return errors.New("Failed parsing host ip")
 	}
 
-	template.DNSNames = append(template.DNSNames, "localhost")
-	template.IPAddresses = append(template.IPAddresses, ip)
+	template.DNSNames = append(template.DNSNames, hostname)
+	template.IPAddresses = append(template.IPAddresses, parsedIP)
 
 	keyPair, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
