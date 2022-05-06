@@ -1,8 +1,9 @@
 package libcrypto
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
@@ -37,7 +38,7 @@ func GenerateCertsForHost(hostname, ip, certPath, keyPath string, expiry time.Ti
 	template.DNSNames = append(template.DNSNames, hostname)
 	template.IPAddresses = append(template.IPAddresses, parsedIP)
 
-	keyPair, err := rsa.GenerateKey(rand.Reader, 2048)
+	keyPair, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return err
 	}
@@ -52,7 +53,12 @@ func GenerateCertsForHost(hostname, ip, certPath, keyPath string, expiry time.Ti
 		return err
 	}
 
-	err = createPEMEncodedFile(keyPath, "RSA PRIVATE KEY", x509.MarshalPKCS1PrivateKey(keyPair))
+	key, err := x509.MarshalECPrivateKey(keyPair)
+	if err != nil {
+		return err
+	}
+
+	err = createPEMEncodedFile(keyPath, "EC PRIVATE KEY", key)
 	if err != nil {
 		return err
 	}
